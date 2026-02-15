@@ -27,13 +27,15 @@ async def check_user_assets(chat_id, user_data):
             data = await sensor.run()
             
             context = memory.recall(f"{ticker} price history")
+
             decision = mind.analyze_asset(ticker, data, context, profile)
             
             urgency = decision.get("urgency", 0)
             print(f"[DEBUG] {ticker} | Urgência: {urgency} | Motivo: {decision.get('message')}")
             
-            if decision.get("notify") and urgency >= 5:
+            if decision.get("notify") and urgency >= 3:
                 msg = f"🚨 {ticker}: {decision['message']}\n(Urgência: {urgency})"
+                print(f"[Enviando Para {chat_id}] {ticker}")
                 await notifier.send_direct(chat_id, msg)
             
             memory.store(
@@ -42,10 +44,9 @@ async def check_user_assets(chat_id, user_data):
             )
             
         except Exception as e:
-            print(f"Erro processando {ticker}: {e}")
+            print(f"Erro processando {ticker} para {chat_id}: {e}")
 
 async def pipeline():
-    """Loop principal: Busca usuários no DB e inicia verificação."""
     try:
         all_users_map = await get_all_users_with_assets()
         
@@ -57,7 +58,7 @@ async def pipeline():
             print("--- Pipeline SQL: Nenhum usuário cadastrado ainda ---")
             
     except Exception as e:
-        print(f"Erro crítico no Pipeline: {e}")
+        print(f"Erro crítico no Master Pipeline: {e}. O sistema tentará novamente no próximo ciclo.")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

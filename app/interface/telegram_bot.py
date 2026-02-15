@@ -1,5 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.request import HTTPXRequest
 from app.core.config import settings
 from app.brain.reasoner import ArgusMind
 from app.core.store import add_asset, get_user_assets, set_profile_analysis, set_user_language
@@ -58,7 +59,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.edit_message_text(text=f"Idioma definido: {lang.upper()}")
 
 def create_bot():
-    app = ApplicationBuilder().token(settings.TELEGRAM_TOKEN).build()
+    req = HTTPXRequest(connection_pool_size=8, connect_timeout=15.0, read_timeout=15.0)
+    
+    app = ApplicationBuilder().token(settings.TELEGRAM_TOKEN).request(req).build()
+    
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("config", start))
     app.add_handler(CommandHandler("add", add_handler))

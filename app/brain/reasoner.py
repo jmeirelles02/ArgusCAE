@@ -1,47 +1,50 @@
 import json
-from google import genai
-from google.genai import types
-from app.core.config import settings
+import ollama
 
 class ArgusMind:
     def __init__(self):
-        self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
-        self.model_name = "gemini-2.5-flash-lite"
+        self.model_name = "qwen2.5"
 
     def analyze_asset(self, ticker: str, data: dict, context: list, user_profile: str) -> dict:
         prompt = f"""
-        ATUE COMO: Argus, consultor financeiro.
-        PERFIL: {user_profile}
+        ATUE COMO: Consultor financeiro sênior.
+        PERFIL DO USUÁRIO: {user_profile}
         ATIVO: {ticker}
         DADO ATUAL: {data}
-        HISTÓRICO: {context}
+        HISTÓRICO RECENTE: {context}
 
-        TAREFA: Analise riscos ou oportunidades.
-        SAÍDA JSON: {{ "notify": bool, "message": "texto curto pt-br", "urgency": int }}
+        TAREFA: Analise se há algo CRÍTICO (Risco ou Oportunidade).
+        REGRAS:
+        1. Notifique se a urgência for 3 ou maior.
+        2. Considere o perfil do usuário.
+        
+        SAÍDA JSON OBRIGATÓRIA: {{ "notify": bool, "message": "texto curto em pt-br", "urgency": int }}
         """
         
         try:
-            response = self.client.models.generate_content(
+            response = ollama.generate(
                 model=self.model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(response_mime_type="application/json")
+                prompt=prompt,
+                format='json'
             )
-            return json.loads(response.text)
+            return json.loads(response['response'])
+            
         except Exception as e:
-            print(f"Erro no Gemini (Analyze): {e}")
-            return {"notify": False, "message": "Erro na IA", "urgency": 0}
+            print(f"Erro na IA Local (Analyze) para {ticker}: {e}")
+            return {"notify": False, "message": "Erro na IA Local", "urgency": 0}
 
     def generate_profile_analysis(self, assets: list) -> str:
         prompt = f"""
-        Analise o perfil de investidor de quem tem: {assets}.
-        Responda em 2 frases curtas.
+        Analise o perfil de investidor de quem possui os seguintes ativos: {assets}.
+        Classifique como: Conservador, Moderado ou Arrojado.
+        Explique brevemente em 2 frases em português.
         """
         try:
-            response = self.client.models.generate_content(
+            response = ollama.generate(
                 model=self.model_name,
-                contents=prompt
+                prompt=prompt
             )
-            return response.text
+            return response['response']
         except Exception as e:
-            print(f"Erro no Gemini (Profile): {e}")
-            return "Análise indisponível no momento."
+            print(f"Erro na IA Local (Profile): {e}")
+            return "Não foi possível analisar o perfil no momento."
