@@ -1,9 +1,9 @@
 import random
 from datetime import datetime
 
-class MockSensor:
+class Simulador:
     async def run(self):
-        # Simula uma variação abrupta de valor
+
         val = random.randint(100, 500)
         return {
             "source": "mock_market",

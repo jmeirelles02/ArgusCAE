@@ -2,7 +2,6 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 from app.core.config import settings
 from app.brain.reasoner import ArgusMind
-# Importando as funções de banco criadas no passo anterior
 from app.core.store import add_asset, get_user_assets, set_profile_analysis, set_user_language
 
 mind = ArgusMind()
@@ -28,7 +27,6 @@ async def add_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ticker = context.args[0].upper()
     chat_id = update.message.chat_id
     
-    # Chama função async do store
     success = await add_asset(chat_id, ticker)
     
     if success:
@@ -56,7 +54,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     lang = 'pt' if query.data == 'set_pt' else 'en'
-    await set_user_language(query.message.chat_id, lang) # Função hipotética no store
+    await set_user_language(query.message.chat_id, lang)
     await query.edit_message_text(text=f"Idioma definido: {lang.upper()}")
 
 def create_bot():

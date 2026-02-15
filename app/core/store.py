@@ -2,8 +2,6 @@ from sqlalchemy import select
 from app.core.database import AsyncSessionLocal
 from app.core.models import User, Asset
 
-# --- Funções Auxiliares de Banco ---
-
 async def get_or_create_user(session, chat_id: int):
     """Busca um usuário ou cria se não existir."""
     result = await session.execute(select(User).where(User.chat_id == chat_id))
@@ -11,26 +9,21 @@ async def get_or_create_user(session, chat_id: int):
     if not user:
         user = User(chat_id=chat_id)
         session.add(user)
-        # O commit deve ser feito pelo chamador para agrupar transações se necessário
         await session.flush() 
     return user
-
-# --- Funções do Argus ---
 
 async def add_asset(chat_id: int, ticker: str):
     """Adiciona um ativo ao portfólio do usuário."""
     async with AsyncSessionLocal() as session:
         await get_or_create_user(session, chat_id)
-        
-        # Verifica se já tem o ativo
+
         result = await session.execute(
             select(Asset).where(Asset.user_chat_id == chat_id, Asset.ticker == ticker)
         )
         if result.scalars().first():
             await session.commit()
-            return False # Já existe
+            return False
 
-        # Adiciona novo ativo
         new_asset = Asset(user_chat_id=chat_id, ticker=ticker)
         session.add(new_asset)
         await session.commit()
@@ -44,7 +37,6 @@ async def get_user_assets(chat_id: int):
         )
         user = result.scalars().first()
         if user:
-            # Força o carregamento dos assets (lazy loading)
             await session.refresh(user, attribute_names=['assets'])
             return [asset.ticker for asset in user.assets]
         return []
@@ -71,7 +63,6 @@ async def get_all_users_with_assets():
         
         data_map = {}
         for user in users:
-            # Carrega assets explicitamente para evitar erro de sessão fechada
             await session.refresh(user, attribute_names=['assets'])
             
             data_map[user.chat_id] = {
