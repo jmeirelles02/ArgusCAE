@@ -4,3 +4,4 @@ __pycache__/
 .env
 argus.db
 chroma_db/
+.gitignore
