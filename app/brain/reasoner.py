@@ -17,8 +17,9 @@ class ArgusMind:
         REGRAS:
         1. Notifique se a urgência for 3 ou maior.
         2. Considere o perfil do usuário.
+        3. Forneça uma sugestão de ação prática e alinhada ao perfil.
         
-        SAÍDA JSON OBRIGATÓRIA: {{ "notify": bool, "message": "texto curto em pt-br", "urgency": int }}
+        SAÍDA JSON OBRIGATÓRIA: {{ "notify": bool, "message": "texto curto em pt-br", "urgency": int, "sugestao": "ação recomendada em pt-br" }}
         """
         
         try:
@@ -27,11 +28,14 @@ class ArgusMind:
                 prompt=prompt,
                 format='json'
             )
-            return json.loads(response['response'])
+            result = json.loads(response['response'])
+            if "sugestao" not in result:
+                result["sugestao"] = "Monitore a evolução do ativo."
+            return result
             
         except Exception as e:
             print(f"Erro na IA Local (Analyze) para {ticker}: {e}")
-            return {"notify": False, "message": "Erro na IA Local", "urgency": 0}
+            return {"notify": False, "message": "Erro na IA Local", "urgency": 0, "sugestao": ""}
 
     def generate_profile_analysis(self, assets: list) -> str:
         prompt = f"""
