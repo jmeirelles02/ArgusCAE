@@ -1,6 +1,6 @@
-# Argus BackEnd
+# Argus
 
-Backend de monitoramento de ativos com alertas no Telegram, coleta de mercado via Yahoo Finance e análise por LLM local (Ollama).
+Bot de monitoramento de ativos com alertas no Telegram, coleta de mercado via Yahoo Finance e análise por LLM local (Ollama).
 
 ## Requisitos
 
